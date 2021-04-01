@@ -1,0 +1,82 @@
+name: Development
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ${{matrix.os}}-latest
+    continue-on-error: ${{matrix.experimental}}
+    
+    strategy:
+      matrix:
+        os:
+          - ubuntu
+        
+        ruby:
+          - 2.5
+          - 2.6
+          - 2.7
+          - 3.0
+        
+        experimental: [false]
+        env: [""]
+        
+        include:
+          - os: ubuntu
+            ruby: truffleruby
+            experimental: true
+          - os: ubuntu
+            ruby: jruby
+            experimental: true
+            env: JRUBY_OPTS="--debug -X+O"
+          - os: ubuntu
+            ruby: head
+            experimental: true
+    
+    services:
+      postgres:
+        image: postgres
+        ports:
+          - 5432:5432
+        env:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: test
+          POSTGRES_HOST_AUTH_METHOD: trust
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 20
+      
+      mariadb:
+        image: mariadb
+        ports:
+          - 3306:3306
+        env:
+          MYSQL_USER: test
+          MYSQL_PASSWORD: test
+          MYSQL_DATABASE: test
+          MYSQL_ROOT_PASSWORD: test
+        options: >-
+          --health-cmd "mysqladmin ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 20
+    
+    steps:
+    - uses: actions/checkout@v2
+    - uses: ruby/setup-ruby@v1
+      with:
+        ruby-version: ${{matrix.ruby}}
+        bundler-cache: true
+    
+    - name: Installing dependencies (ubuntu)
+      if: matrix.os == 'ubuntu'
+      run: |
+        sudo systemctl stop mysql
+        sudo apt-get install postgresql postgresql-contrib libmariadb-dev
+    
+    - name: Run tests
+      timeout-minutes: 5
+      run: ${{matrix.env}} bundle exec rspec
