@@ -33,7 +33,9 @@ class MySchema
 		property :id
 		property :name
 		
-		def posts = scope(Post, user_id: self.id)
+		def posts
+			scope(Post, user_id: self.id)
+		end
 	end
 	
 	class Post
@@ -42,11 +44,18 @@ class MySchema
 		property :id
 		property :user_id
 		
-		def user = scope(User, id: self.user_id)
+		def user
+			scope(User, id: self.user_id)
+		end
 	end
 	
-	def users = table(User)
-	def posts = table(Post)
+	def users
+		table(User)
+	end
+	
+	def posts
+		table(Post)
+	end
 end
 
 RSpec.shared_examples DB::Model::Schema do |adapter|
