@@ -20,47 +20,94 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-require_relative 'view'
+require_relative 'statement/count'
 
 module DB
 	module Model
-		class Scope < View
-			include Enumerable
-			
-			def initialize(session, model, attributes, cache = nil)
-				super(session, model, cache)
+		class View
+			def initialize(session, model, cache = nil)
+				@session = session
+				@model = model
+				@cache = cache
 				
-				@attributes = attributes
 				@select = nil
 			end
 			
-			attr :attributes
+			attr :session
+			attr :model
+			attr :cache
 			
 			def create(**attributes)
-				@model.create(@session, @attributes.merge(attributes))
+				@model.create(@session, attributes)
+			end
+			
+			def insert(keys, rows)
+				@model.insert(@session, keys, rows)
+			end
+			
+			def find(*key)
+				@model.find(@session, *key)
+			end
+			
+			def where(*arguments)
+				@model.where(@session, *arguments)
 			end
 			
 			def predicate
-				Statement::Equal.new(@model, @attributes.keys, @attributes.values)
+				nil
 			end
 			
-			def cache_key
-				[@model, @attributes]
+			def count
+				result = Statement::Select.new(@model,
+					fields: Statement::Count::ALL,
+					where: self.predicate,
+				).call(@session).to_a
+				
+				# First row, first value:
+				return result.first.first
 			end
 			
-			def update_cache(result)
-				key = [@model, @attributes]
-				@cache[key] = self.select.apply(@session, result)
+			def preload(name)
+				@cache ||= {}
+				
+				scopes = []
+				self.each do |record|
+					scopes << record.send(name)
+				end
+				
+				# Build a buffer of queries:
+				query = @session.query
+				first = true
+				
+				scopes.each do |scope|
+					query.clause(";") unless first
+					first = false
+					
+					scope.select.append_to(query)
+				end
+				
+				query.send
+				
+				scopes.each do |scope|
+					result = @session.next_result
+					scope.update_cache(result)
+				end
+				
+				return self
 			end
 			
 			def each(&block)
-				if @cache
-					@cache.fetch([@model, @attributes]) do
-						self.select.to_a(@session, @cache)
-					end.each(&block)
-				else
-					self.select.each(@session, &block)
+				self.select.each(@session, @cache, &block)
+			end
+			
+			def to_a
+				records = []
+				
+				self.each do |record|
+					records << record
 				end
+				
+				return records
 			end
 			
 			def select
@@ -70,7 +117,11 @@ module DB
 			end
 			
 			def to_s
-				"\#<#{self.class} #{@model} #{@attributes}>"
+				"\#<#{self.class} #{@model}>"
+			end
+			
+			def inspect
+				to_s
 			end
 		end
 	end

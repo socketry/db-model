@@ -62,7 +62,7 @@ module DB
 					Statement::Insert.new(self,
 						Statement::Fields.new(attributes.keys),
 						Statement::Tuple.new(attributes.values)
-					).apply(session).first
+					).to_a(session).first
 				end
 				
 				# Directly insert one or more records.
@@ -72,7 +72,7 @@ module DB
 						Statement::Multiple.new(
 							rows.map{|row| Statement::Tuple.new(row)}
 						)
-					).apply(session)
+					).to_a(session)
 				end
 				
 				# Find records which match the given primary key.
@@ -80,7 +80,7 @@ module DB
 					Statement::Select.new(self,
 						where: Statement::Equal.new(self, self.primary_key, key),
 						limit: Statement::Limit::ONE
-					).apply(session)
+					).to_a(session)
 				end
 				
 				def where(session, *arguments, **options, &block)
@@ -94,22 +94,27 @@ module DB
 					
 					@properties[name] = klass
 					
-					self.define_method(name) do
-						if @changed.include?(name)
-							return @changed[name]
-						elsif @attributes.include?(name)
-							if klass
+					if klass
+						self.define_method(name) do
+							if @changed&.key?(name)
+								return @changed[name]
+							elsif @attributes.key?(name)
 								value = @attributes[name]
-								
-								@changed[name] = klass.load(value)
+								klass.load(value)
 							else
-								@changed[name] = @attributes[name]
+								nil
 							end
-						else
-							nil
+						end
+					else
+						self.define_method(name) do
+							if @changed&.key?(name)
+								return @changed[name]
+							else
+								@attributes[name]
+							end
 						end
 					end
-
+					
 					self.define_method(:"#{name}=") do |value|
 						@changed[name] = value
 					end
@@ -126,69 +131,30 @@ module DB
 						end
 					end
 				end
-				
-				def has_many(name, model, key:,  **options)
-					if @relationships.key?(name)
-						raise ArgumentError.new("Relationship #{name.inspect} already defined!")
-					end
-					
-					@relationships[name] = model
-					key = Array(key)
-					
-					self.define_method(name) do
-						Scope.new(@session, model, {}, **options)
-					end
-				end
-				
-				# scope(:users, User)
-				
-				def belongs_to(name, model, key: :"#{name}_id", unique: false, **options)
-					if @relationships.key?(name)
-						raise ArgumentError.new("Relationship #{name.inspect} already defined!")
-					end
-					
-					@relationships[name] = model
-					key = Array(key)
-					
-					self.define_method(name) do
-						foreign_key = key.map{|field| self.send(field)}
-						return model.find(@session, *foreign_key)
-					end
-					
-					self.define_method(:"#{name}=") do |record|
-						primary_key = record.primary_key
-						
-						key.each_with_index do |field, index|
-							self.send(:"#{field}=", primary_key[index])
-						end
-					end
-					
-					model.define_method()
-				end
 			end
 			
 			def self.included(klass)
 				klass.extend(Base)
 			end
 			
-			def initialize(session, attributes)
+			def initialize(session, attributes, cache = nil)
 				@session = session
 				@attributes = attributes
-				@changed = {}
-				
-				@scopes = {}
+				@changed = nil
+				@cache = cache
 			end
 			
 			attr :session
 			attr :attributes
 			attr :changed
+			attr :cache
 			
 			def to_s
 				"\#<#{self.class.type} #{@attributes.inspect}>"
 			end
 			
 			def inspect
-				if @changed.any?
+				if @changed&.any?
 					"\#<#{self.class.type} #{@attributes.inspect} changed=#{@changed.inspect}>"
 				else
 					to_s
@@ -217,18 +183,18 @@ module DB
 					)
 				end
 				
-				statement.apply(@session)
+				return statement.to_a(@session)
 			end
 			
 			def scope(model, attributes)
-				Scope.new(@session, model, attributes)
+				Scope.new(@session, model, attributes, @cache)
 			end
 			
 		protected
 			
 			# Moves values from `@changed` into `@attributes`.
 			def flatten!
-				keys = @changed.keys
+				return nil unless keys = @changed&.keys
 				
 				self.class.properties.each do |key, klass|
 					begin
@@ -250,7 +216,7 @@ module DB
 					@attributes[key] = value
 				end
 				
-				@changed.clear
+				@changed = nil
 				
 				return keys
 			end

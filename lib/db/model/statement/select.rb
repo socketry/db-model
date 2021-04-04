@@ -31,8 +31,8 @@ module DB
 					@limit = limit
 				end
 				
-				def to_sql(session)
-					statement = session.query("SELECT")
+				def append_to(statement)
+					statement.clause("SELECT")
 					
 					if @fields
 						@fields.append_to(statement)
@@ -53,25 +53,34 @@ module DB
 					return statement
 				end
 				
+				def to_sql(session)
+					self.append_to(session.query)
+				end
+				
 				def call(session)
 					to_sql(session).call
 				end
 				
-				def apply(session)
+				def to_a(session, cache = nil)
 					result = call(session)
+					
+					return apply(session, result, cache)
+				end
+				
+				def apply(session, result, cache = nil)
 					keys = result.field_names.map(&:to_sym)
 					
 					result.map do |row|
-						@source.new(session, keys.zip(row).to_h)
+						@source.new(session, keys.zip(row).to_h, cache)
 					end
 				end
 				
-				def each(session)
+				def each(session, cache = nil)
 					result = call(session)
 					keys = result.field_names.map(&:to_sym)
 					
 					result.each do |row|
-						yield @source.new(session, keys.zip(row).to_h)
+						yield @source.new(session, keys.zip(row).to_h, cache)
 					end
 				end
 			end

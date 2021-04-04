@@ -37,7 +37,12 @@ module DB
 						statement.clause("AND") unless first
 						first = false
 						
-						field.append_to(statement)
+						if field.is_a?(Symbol)
+							statement.identifier(field)
+						else
+							field.append_to(statement)
+						end
+						
 						statement.clause("=")
 						statement.literal(@values[index])
 					end

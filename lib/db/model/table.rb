@@ -20,51 +20,11 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-require_relative 'statement/count'
+require_relative 'view'
 
 module DB
 	module Model
-		class Table
-			def initialize(session, model, **options)
-				@session = session
-				@model = model
-				@options = options
-			end
-			
-			attr :session
-			attr :model
-			attr :options
-			
-			def insert(keys, rows)
-				@model.insert(@session, keys, rows)
-			end
-			
-			def create(attributes)
-				@model.create(@session, attributes)
-			end
-			
-			def find(*key)
-				@model.find(@session, *key)
-			end
-			
-			def where(*arguments)
-				@model.where(@session, *arguments)
-			end
-			
-			def count
-				result = Statement::Select.new(@model,
-					fields: Statement::Count::ALL,
-				).call(@session).to_a
-				
-				# First row, first value:
-				return result.first.first
-			end
-			
-			def to_s
-				"\#<#{self.class} #{@model}>"
-			end
-			
-			alias inspect to_s
+		class Table < View
 		end
 	end
 end

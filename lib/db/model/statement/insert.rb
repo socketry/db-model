@@ -50,7 +50,7 @@ module DB
 					to_sql(session).call
 				end
 				
-				def apply(session)
+				def to_a(session)
 					result = call(session)
 					keys = result.field_names.map(&:to_sym)
 					
