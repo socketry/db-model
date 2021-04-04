@@ -109,6 +109,6 @@ end
 
 DB::Adapters.each do |name, klass|
 	RSpec.describe klass do
-		it_behaves_like DB::Model::Schema, klass.new(database: 'test')
+		it_behaves_like DB::Model::Schema, klass.new(**CREDENTIALS)
 	end
 end
