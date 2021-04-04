@@ -31,6 +31,7 @@ class MySchema
 		include DB::Model::Record
 		
 		property :id
+		property :name
 		
 		def posts = scope(Post, user_id: self.id)
 	end
@@ -99,6 +100,7 @@ RSpec.shared_examples DB::Model::Schema do |adapter|
 		])
 		
 		user = schema.users.find(users.first.id).first
+		expect(user.name).to be == users.first.name
 		
 		expect(schema.users.count).to be == 2
 		expect(schema.posts.count).to be == 3
