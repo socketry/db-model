@@ -54,7 +54,7 @@ module DB
 			def count
 				result = Statement::Select.new(@model,
 					fields: Statement::Count::ALL,
-				).call(@session)
+				).call(@session).to_a
 				
 				# First row, first value:
 				return result.first.first
