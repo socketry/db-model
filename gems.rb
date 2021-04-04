@@ -10,6 +10,6 @@ group :maintenance, optional: true do
 end
 
 group :adapters do
-	gem "db-postgres"
-	gem "db-mariadb"
+	gem "db-postgres", "~> 0.5.3"
+	gem "db-mariadb", "~> 0.8.3"
 end
