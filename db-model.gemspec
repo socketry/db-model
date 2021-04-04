@@ -5,7 +5,7 @@ Gem::Specification.new do |spec|
 	spec.name = "db-model"
 	spec.version = DB::Model::VERSION
 	
-	spec.summary = "A low level database access gem."
+	spec.summary = "A object-relational mapper."
 	spec.authors = ["Samuel Williams"]
 	spec.license = "MIT"
 	
