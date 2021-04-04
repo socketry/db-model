@@ -82,7 +82,6 @@ RSpec.shared_examples DB::Model::Schema do |adapter|
 					.identifier(:name).clause("TEXT NOT NULL")
 				.clause(")").call
 			
-			
 			session.clause("CREATE TABLE IF NOT EXISTS")
 				.identifier(MySchema::Post.type)
 				.clause("(")
