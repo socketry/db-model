@@ -77,8 +77,8 @@ end
 # Create an event loop:
 Sync do
 	# Connect to the database:
-	client.transaction do |session|
-		schema = TestSchema.new(session)
+	client.transaction do |context|
+		schema = TestSchema.new(context)
 		
 		# Create a user:
 		user = schema.users.create(name: "Posty McPostface")

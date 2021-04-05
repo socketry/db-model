@@ -28,8 +28,8 @@ module DB
 		class Where
 			include Enumerable
 			
-			def initialize(session, model, *arguments, **options, &block)
-				@session = session
+			def initialize(context, model, *arguments, **options, &block)
+				@context = context
 				@model = model
 				@predicate = Statement::Predicate.where(*arguments, **options, &block)
 			end
@@ -52,11 +52,11 @@ module DB
 				return Statement::Select.new(@model,
 					where: @predicate & @model.find_predicate(*key),
 					limit: Statement::Limit::ONE
-				).to_a(session)
+				).to_a(context)
 			end
 			
 			def where(*arguments, **options, &block)
-				self.class.new(@session, model,
+				self.class.new(@context, model,
 					@predicate + Statement::Predicate.where(*arguments, **options, &block)
 				)
 			end
@@ -64,7 +64,7 @@ module DB
 			def each(&block)
 				Statement::Select.new(@model,
 					where: @predicate
-				).each(@session, &block)
+				).each(@context, &block)
 			end
 			
 			def to_s

@@ -31,8 +31,8 @@ module DB
 					@limit = limit
 				end
 				
-				def to_sql(session)
-					statement = session.clause("DELETE FROM")
+				def to_sql(context)
+					statement = context.clause("DELETE FROM")
 					
 					statement.identifier(@source.type)
 					
@@ -43,8 +43,8 @@ module DB
 					return statements
 				end
 				
-				def call(session)
-					to_sql(session).call
+				def call(context)
+					to_sql(context).call
 				end
 			end
 		end

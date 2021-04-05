@@ -30,8 +30,8 @@ module DB
 					@values = values
 				end
 				
-				def to_sql(session)
-					statement = session.query("INSERT INTO")
+				def to_sql(context)
+					statement = context.query("INSERT INTO")
 					
 					statement.identifier(@source.type)
 					
@@ -46,13 +46,13 @@ module DB
 					return statement
 				end
 				
-				def to_a(session)
-					to_sql(session).call do |connection|
+				def to_a(context)
+					to_sql(context).call do |connection|
 						result = connection.next_result
 						keys = result.field_names.map(&:to_sym)
 						
 						result.map do |row|
-							@source.new(session, keys.zip(row).to_h)
+							@source.new(context, keys.zip(row).to_h)
 						end
 					end
 				end

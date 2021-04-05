@@ -25,24 +25,24 @@ require_relative 'statement/count'
 module DB
 	module Model
 		class Relation
-			def initialize(session, model, cache = nil)
-				@session = session
+			def initialize(context, model, cache = nil)
+				@context = context
 				@model = model
 				@cache = cache
 				
 				@select = nil
 			end
 			
-			attr :session
+			attr :context
 			attr :model
 			attr :cache
 			
 			def create(**attributes)
-				@model.create(@session, attributes)
+				@model.create(@context, attributes)
 			end
 			
 			def insert(keys, rows, **attributes)
-				@model.insert(@session, keys, rows, **attributes)
+				@model.insert(@context, keys, rows, **attributes)
 			end
 			
 			def find(*key)
@@ -55,11 +55,11 @@ module DB
 				return Statement::Select.new(@model,
 					where: predicate,
 					limit: Statement::Limit::ONE
-				).to_a(session)
+				).to_a(context)
 			end
 			
 			def where(*arguments, **options, &block)
-				where = @model.where(@session, *arguments, **options, &block)
+				where = @model.where(@context, *arguments, **options, &block)
 				
 				if predicate = self.predicate
 					where.predicate &= predicate
@@ -76,7 +76,7 @@ module DB
 				Statement::Select.new(@model,
 					fields: fields,
 					where: self.predicate,
-				).to_sql(session).call do |connection|
+				).to_sql(context).call do |connection|
 					result = connection.next_result
 					
 					row = result.to_a.first
@@ -95,7 +95,7 @@ module DB
 				end
 				
 				# Build a buffer of queries:
-				query = @session.query
+				query = @context.query
 				first = true
 				
 				scopes.each do |scope|
@@ -118,10 +118,10 @@ module DB
 			def each(&block)
 				if @cache
 					@cache.fetch(self.cache_key) do
-						self.select.to_a(@session, @cache)
+						self.select.to_a(@context, @cache)
 					end.each(&block)
 				else
-					self.select.each(@session, &block)
+					self.select.each(@context, &block)
 				end
 			end
 			
@@ -140,7 +140,7 @@ module DB
 			end
 			
 			def update_cache(result)
-				@cache[self.cache_key] = self.select.apply(@session, result)
+				@cache[self.cache_key] = self.select.apply(@context, result)
 			end
 			
 			def select

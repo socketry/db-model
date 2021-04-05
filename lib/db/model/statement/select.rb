@@ -53,33 +53,33 @@ module DB
 					return statement
 				end
 				
-				def to_sql(session)
-					self.append_to(session)
+				def to_sql(context)
+					self.append_to(context)
 				end
 				
-				def to_a(session, cache = nil)
-					to_sql(session).call do |connection|
+				def to_a(context, cache = nil)
+					to_sql(context).call do |connection|
 						result = connection.next_result
 						
-						return apply(session, result, cache)
+						return apply(context, result, cache)
 					end
 				end
 				
-				def apply(session, result, cache = nil)
+				def apply(context, result, cache = nil)
 					keys = result.field_names.map(&:to_sym)
 					
 					result.map do |row|
-						@source.new(session, keys.zip(row).to_h, cache)
+						@source.new(context, keys.zip(row).to_h, cache)
 					end
 				end
 				
-				def each(session, cache = nil)
-					to_sql(session).call do |connection|
+				def each(context, cache = nil)
+					to_sql(context).call do |connection|
 						result = connection.next_result
 						keys = result.field_names.map(&:to_sym)
 						
 						result.each do |row|
-							yield @source.new(session, keys.zip(row).to_h, cache)
+							yield @source.new(context, keys.zip(row).to_h, cache)
 						end
 					end
 				end

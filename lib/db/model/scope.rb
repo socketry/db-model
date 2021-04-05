@@ -25,8 +25,8 @@ require_relative 'relation'
 module DB
 	module Model
 		class Scope < Relation
-			def initialize(session, model, attributes, cache = nil)
-				super(session, model, cache)
+			def initialize(context, model, attributes, cache = nil)
+				super(context, model, cache)
 				
 				@attributes = attributes
 			end
@@ -34,19 +34,19 @@ module DB
 			attr :attributes
 			
 			def create(**attributes)
-				@model.create(@session, @attributes.merge(attributes))
+				@model.create(@context, @attributes.merge(attributes))
 			end
 			
 			def insert(keys, rows, **attributes)
-				@model.insert(@session, keys, rows, **@attributes.merge(attributes))
+				@model.insert(@context, keys, rows, **@attributes.merge(attributes))
 			end
 			
 			def find(*key)
-				@model.find(@session, *key)
+				@model.find(@context, *key)
 			end
 			
 			def where(*arguments)
-				@model.where(@session, *arguments)
+				@model.where(@context, *arguments)
 			end
 			
 			def predicate

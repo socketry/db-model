@@ -25,12 +25,12 @@ require_relative 'table'
 module DB
 	module Model
 		module Schema
-			def initialize(session)
-				@session = session
+			def initialize(context)
+				@context = context
 			end
 			
 			def table(model, **options)
-				Table.new(@session, model, **options)
+				Table.new(@context, model, **options)
 			end
 		end
 	end

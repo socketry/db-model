@@ -30,8 +30,8 @@ module DB
 					@where = where
 				end
 				
-				def to_sql(session)
-					statement = session.query("UPDATE")
+				def to_sql(context)
+					statement = context.query("UPDATE")
 					
 					statement.identifier(@source.type)
 					
@@ -41,8 +41,8 @@ module DB
 					return statement
 				end
 				
-				def call(session)
-					to_sql(session).call
+				def call(context)
+					to_sql(context).call
 				end
 			end
 		end

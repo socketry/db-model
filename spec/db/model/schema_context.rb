@@ -62,22 +62,22 @@ RSpec.shared_context TestSchema do |adapter|
 	include_context Async::RSpec::Reactor
 	
 	let(:client) {DB::Client.new(adapter)}
-	let(:session) {client.session}
-	let(:schema) {TestSchema.new(session)}
+	let(:context) {client.context}
+	let(:schema) {TestSchema.new(context)}
 	
 	before do
-		client.transaction do |session|
-			session.query("DROP TABLE IF EXISTS %{table}", table: TestSchema::User.type).call
-			session.query("DROP TABLE IF EXISTS %{table}", table: TestSchema::Post.type).call
+		client.transaction do |context|
+			context.query("DROP TABLE IF EXISTS %{table}", table: TestSchema::User.type).call
+			context.query("DROP TABLE IF EXISTS %{table}", table: TestSchema::Post.type).call
 			
-			session.clause("CREATE TABLE IF NOT EXISTS")
+			context.clause("CREATE TABLE IF NOT EXISTS")
 				.identifier(TestSchema::User.type)
 				.clause("(")
 					.key_column.clause(",")
 					.identifier(:name).clause("TEXT NOT NULL")
 				.clause(")").call
 			
-			session.clause("CREATE TABLE IF NOT EXISTS")
+			context.clause("CREATE TABLE IF NOT EXISTS")
 				.identifier(TestSchema::Post.type)
 				.clause("(")
 					.key_column.clause(",")

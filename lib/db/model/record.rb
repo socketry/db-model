@@ -58,15 +58,15 @@ module DB
 				end
 				
 				# Directly create one record.
-				def create(session, **attributes)
+				def create(context, **attributes)
 					Statement::Insert.new(self,
 						Statement::Fields.new(attributes.keys),
 						Statement::Tuple.new(attributes.values)
-					).to_a(session).first
+					).to_a(context).first
 				end
 				
 				# Directly insert one or more records.
-				def insert(session, keys, rows, **attributes)
+				def insert(context, keys, rows, **attributes)
 					if attributes.any?
 						fields = Statement::Fields.new(attributes.keys + keys)
 						values = attributes.values
@@ -76,23 +76,23 @@ module DB
 						tuples = rows.map{|row| Statement::Tuple.new(row)}
 					end
 					
-					return Statement::Insert.new(self, fields, Statement::Multiple.new(tuples)).to_a(session)
+					return Statement::Insert.new(self, fields, Statement::Multiple.new(tuples)).to_a(context)
 				end
 				
 				# Find records which match the given primary key.
-				def find(session, *key)
+				def find(context, *key)
 					Statement::Select.new(self,
 						where: find_predicate(*key),
 						limit: Statement::Limit::ONE
-					).to_a(session)
+					).to_a(context)
 				end
 				
 				def find_predicate(*key)
 					Statement::Equal.new(self, self.primary_key, key)
 				end
 				
-				def where(session, *arguments, **options, &block)
-					Where.new(session, self, *arguments, **options, &block)
+				def where(context, *arguments, **options, &block)
+					Where.new(context, self, *arguments, **options, &block)
 				end
 				
 				def property(name, klass = nil)
@@ -145,14 +145,14 @@ module DB
 				klass.extend(Base)
 			end
 			
-			def initialize(session, attributes, cache = nil)
-				@session = session
+			def initialize(context, attributes, cache = nil)
+				@context = context
 				@attributes = attributes
 				@changed = nil
 				@cache = cache
 			end
 			
-			attr :session
+			attr :context
 			attr :attributes
 			attr :changed
 			attr :cache
@@ -176,7 +176,7 @@ module DB
 				end
 			end
 			
-			def save(session: @session)
+			def save(context: @context)
 				return unless self.flatten!
 				
 				if persisted?
@@ -191,11 +191,11 @@ module DB
 					)
 				end
 				
-				return statement.to_a(@session)
+				return statement.to_a(@context)
 			end
 			
 			def scope(model, attributes)
-				Scope.new(@session, model, attributes, @cache)
+				Scope.new(@context, model, attributes, @cache)
 			end
 			
 		protected
