@@ -15,7 +15,7 @@ Gem::Specification.new do |spec|
 	
 	spec.required_ruby_version = ">= 2.5"
 	
-	spec.add_dependency "db"
+	spec.add_dependency "db", "~> 0.10.0"
 	
 	spec.add_development_dependency "async-rspec", "~> 1.10"
 	spec.add_development_dependency "bundler"

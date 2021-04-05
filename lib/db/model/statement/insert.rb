@@ -46,16 +46,14 @@ module DB
 					return statement
 				end
 				
-				def call(session)
-					to_sql(session).call
-				end
-				
 				def to_a(session)
-					result = call(session)
-					keys = result.field_names.map(&:to_sym)
-					
-					result.map do |row|
-						@source.new(session, keys.zip(row).to_h)
+					to_sql(session).call do |connection|
+						result = connection.next_result
+						keys = result.field_names.map(&:to_sym)
+						
+						result.map do |row|
+							@source.new(session, keys.zip(row).to_h)
+						end
 					end
 				end
 			end

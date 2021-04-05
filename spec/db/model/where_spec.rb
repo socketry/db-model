@@ -38,7 +38,6 @@ RSpec.shared_examples DB::Model::Where do |adapter|
 		])
 		
 		users = schema.users.where(name: "Ada Lovelace").or(name: "Grace Hopper")
-		
 		expect(users.count).to be == 2
 	end
 end

@@ -57,14 +57,12 @@ module DB
 					self.append_to(session)
 				end
 				
-				def call(session)
-					to_sql(session).call
-				end
-				
 				def to_a(session, cache = nil)
-					result = call(session)
-					
-					return apply(session, result, cache)
+					to_sql(session).call do |connection|
+						result = connection.next_result
+						
+						return apply(session, result, cache)
+					end
 				end
 				
 				def apply(session, result, cache = nil)
@@ -76,11 +74,13 @@ module DB
 				end
 				
 				def each(session, cache = nil)
-					result = call(session)
-					keys = result.field_names.map(&:to_sym)
-					
-					result.each do |row|
-						yield @source.new(session, keys.zip(row).to_h, cache)
+					to_sql(session).call do |connection|
+						result = connection.next_result
+						keys = result.field_names.map(&:to_sym)
+						
+						result.each do |row|
+							yield @source.new(session, keys.zip(row).to_h, cache)
+						end
 					end
 				end
 			end

@@ -73,13 +73,17 @@ module DB
 			end
 			
 			def count(fields = Statement::Count::ALL)
-				result = Statement::Select.new(@model,
+				Statement::Select.new(@model,
 					fields: fields,
 					where: self.predicate,
-				).call(@session).to_a
-				
-				# First row, first value:
-				return result.first.first
+				).to_sql(session).call do |connection|
+					result = connection.next_result
+					
+					row = result.to_a.first
+					
+					# Return the count:
+					return row.first
+				end
 			end
 			
 			def preload(name)
@@ -101,11 +105,11 @@ module DB
 					scope.select.append_to(query)
 				end
 				
-				query.send
-				
-				scopes.each do |scope|
-					result = @session.next_result
-					scope.update_cache(result)
+				query.call do |connection|
+					scopes.each do |scope|
+						result = connection.next_result
+						scope.update_cache(result)
+					end
 				end
 				
 				return self
