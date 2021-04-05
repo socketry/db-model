@@ -20,6 +20,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+require_relative 'literal'
+
 module DB
 	module Model
 		module Statement
@@ -46,9 +48,9 @@ module DB
 					def append_to(statement)
 						@key.append_to(statement)
 						statement.clause("BETWEEN")
-						statement.literal(@minimum)
+						@minimum.append_to(statement)
 						statement.clause("AND")
-						statement.literal(@maximum)
+						@maximum.append_to(statement)
 					end
 				end
 				
@@ -109,6 +111,14 @@ module DB
 					def + other
 						Composite.new([self, other])
 					end
+					
+					def & other
+						Composite.new([self, other], "AND")
+					end
+					
+					def | other
+						Composite.new([self, other], "OR")
+					end
 				end
 				
 				def self.coerce(key, value)
@@ -118,30 +128,30 @@ module DB
 					when Range
 						if value.min.nil?
 							if value.exclude_end?
-								Binary.new(key, "<", value.max)
+								Binary.new(key, "<", Literal.new(value.max))
 							else
-								Binary.new(key, "<=", value.max)
+								Binary.new(key, "<=", Literal.new(value.max))
 							end
 						elsif value.max.nil?
 							if value.exclude_end?
-								Binary.new(key, ">", value.max)
+								Binary.new(key, ">", Literal.new(value.max))
 							else
-								Binary.new(key, ">=", value.max)
+								Binary.new(key, ">=", Literal.new(value.max))
 							end
 						else
 							if value.exclude_end?
 								Composite.new([
-									Binary.new(key, ">", value.min),
-									Binary.new(key, "<", value.max)
+									Binary.new(key, ">", Literal.new(value.min)),
+									Binary.new(key, "<", Literal.new(value.max))
 								])
 							else
-								Between.new(key, value.min, value.max)
+								Between.new(key, Literal.new(value.min), Literal.new(value.max))
 							end
 						end
 					when nil
 						Null.new(key)
 					else
-						Binary.new(key, "=", value)
+						Binary.new(key, "=", Literal.new(value))
 					end
 				end
 				

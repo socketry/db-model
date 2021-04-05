@@ -32,7 +32,7 @@ module DB
 				end
 				
 				def append_to(statement)
-					statement.clause("SELECT")
+					statement = statement.clause("SELECT")
 					
 					if @fields
 						@fields.append_to(statement)
@@ -54,7 +54,7 @@ module DB
 				end
 				
 				def to_sql(session)
-					self.append_to(session.query)
+					self.append_to(session)
 				end
 				
 				def call(session)

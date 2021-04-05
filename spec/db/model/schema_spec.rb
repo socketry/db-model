@@ -20,88 +20,18 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-require 'async'
-require 'db/client'
-require 'db/model'
-
-class MySchema
-	include DB::Model::Schema
-	
-	class User
-		include DB::Model::Record
-		
-		property :id
-		property :name
-		
-		def posts
-			scope(Post, user_id: self.id)
-		end
-	end
-	
-	class Post
-		include DB::Model::Record
-		
-		property :id
-		property :user_id
-		
-		def user
-			scope(User, id: self.user_id)
-		end
-	end
-	
-	def users
-		table(User)
-	end
-	
-	def posts
-		table(Post)
-	end
-end
+require_relative 'schema_context'
 
 RSpec.shared_examples DB::Model::Schema do |adapter|
-	include_context Async::RSpec::Reactor
-	
-	subject{DB::Client.new(adapter)}
-	
-	before do
-		subject.transaction do |session|
-			# builder = Builder.new(session)
-			# builder.table(:foo).drop_table_if_exists
-			# builder.table(:foo).create_table do |table|
-			# 	table.primary_key
-			# 	table.column(:name, :text, null: false)
-			# end
-			
-			session.query("DROP TABLE IF EXISTS %{table}", table: MySchema::User.type).call
-			session.query("DROP TABLE IF EXISTS %{table}", table: MySchema::Post.type).call
-			
-			session.clause("CREATE TABLE IF NOT EXISTS")
-				.identifier(MySchema::User.type)
-				.clause("(")
-					.key_column.clause(",")
-					.identifier(:name).clause("TEXT NOT NULL")
-				.clause(")").call
-			
-			session.clause("CREATE TABLE IF NOT EXISTS")
-				.identifier(MySchema::Post.type)
-				.clause("(")
-					.key_column.clause(",")
-					.key_column(:user_id, primary: false, null: false).clause(",")
-					.identifier(:body).clause("TEXT NOT NULL")
-				.clause(")").call
-		end
-	end
+	include_context TestSchema, adapter
 	
 	it "can insert and find records by id" do
-		session = subject.session
-		schema = MySchema.new(session)
-		
 		users = schema.users.insert([:name], [
 			["Ada Lovelace"],
 			["Grace Hopper"],
 		])
 		
-		posts = schema.posts.insert([:user_id, :body], [
+		schema.posts.insert([:user_id, :body], [
 			[users[0].id, "COBOL"],
 			[users[1].id, "Note G"],
 			[users[1].id, "Bernoulli Numbers"]
@@ -112,6 +42,21 @@ RSpec.shared_examples DB::Model::Schema do |adapter|
 		
 		expect(schema.users.count).to be == 2
 		expect(schema.posts.count).to be == 3
+	end
+	
+	it "can preload posts" do
+		names = 100.times.map{|i| ["Robot #{i}"]}
+		users = schema.users.insert([:name], names)
+		
+		posts = 10.times.map{|i| ["Post #{i}"]}
+		users.each do |user|
+			user.posts.insert([:body], posts)
+		end
+		
+		users = schema.users.preload(:posts)
+		
+		expect(users.cache).to_not be_empty
+		expect(users.cache.size).to be == 100
 	end
 end
 

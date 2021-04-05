@@ -34,6 +34,27 @@ module DB
 				@predicate = Statement::Predicate.where(*arguments, **options, &block)
 			end
 			
+			attr_accessor :predicate
+			
+			def or(*arguments, **options, &block)
+				@predicate |= Statement::Predicate.where(*arguments, **options, &block)
+				
+				return self
+			end
+			
+			def and(*arguments, **options, &block)
+				@predicate &= Statement::Predicate.where(*arguments, **options, &block)
+				
+				return self
+			end
+			
+			def find(*key)
+				return Statement::Select.new(@model,
+					where: @predicate & @model.find_predicate(*key),
+					limit: Statement::Limit::ONE
+				).to_a(session)
+			end
+			
 			def where(*arguments, **options, &block)
 				self.class.new(@session, model,
 					@predicate + Statement::Predicate.where(*arguments, **options, &block)

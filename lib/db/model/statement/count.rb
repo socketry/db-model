@@ -31,8 +31,6 @@ module DB
 				end
 				
 				def append_to(statement)
-					first = true
-					
 					statement.clause("COUNT(")
 					
 					@expression.append_to(statement)

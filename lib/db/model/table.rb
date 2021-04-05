@@ -20,11 +20,11 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-require_relative 'view'
+require_relative 'relation'
 
 module DB
 	module Model
-		class Table < View
+		class Table < Relation
 		end
 	end
 end

@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-# Copyright, 2012, by Samuel G. D. Williams. <http://www.codeotaku.com>
+# Copyright, 2021, by Samuel G. D. Williams. <http://www.codeotaku.com>
 # 
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -20,49 +20,17 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-require_relative 'relation'
-
 module DB
 	module Model
-		class Scope < Relation
-			def initialize(session, model, attributes, cache = nil)
-				super(session, model, cache)
+		module Statement
+			class Literal
+				def initialize(value)
+					@value = value
+				end
 				
-				@attributes = attributes
-			end
-			
-			attr :attributes
-			
-			def create(**attributes)
-				@model.create(@session, @attributes.merge(attributes))
-			end
-			
-			def insert(keys, rows, **attributes)
-				@model.insert(@session, keys, rows, **@attributes.merge(attributes))
-			end
-			
-			def find(*key)
-				@model.find(@session, *key)
-			end
-			
-			def where(*arguments)
-				@model.where(@session, *arguments)
-			end
-			
-			def predicate
-				Statement::Equal.new(@model, @attributes.keys, @attributes.values)
-			end
-			
-			def cache_key
-				[@model, @attributes]
-			end
-			
-			def each(cache: @cache, &block)
-				super(cache: cache, &block)
-			end
-			
-			def to_s
-				"\#<#{self.class} #{@model} #{@attributes}>"
+				def append_to(statement)
+					statement.literal(@value)
+				end
 			end
 		end
 	end

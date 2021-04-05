@@ -24,7 +24,7 @@ require_relative 'statement/count'
 
 module DB
 	module Model
-		class View
+		class Relation
 			def initialize(session, model, cache = nil)
 				@session = session
 				@model = model
@@ -41,25 +41,40 @@ module DB
 				@model.create(@session, attributes)
 			end
 			
-			def insert(keys, rows)
-				@model.insert(@session, keys, rows)
+			def insert(keys, rows, **attributes)
+				@model.insert(@session, keys, rows, **attributes)
 			end
 			
 			def find(*key)
-				@model.find(@session, *key)
+				if predicate = self.predicate
+					predicate = predicate & @model.find_predicate(*key)
+				else
+					predicate = @model.find_predicate(*key)
+				end
+				
+				return Statement::Select.new(@model,
+					where: predicate,
+					limit: Statement::Limit::ONE
+				).to_a(session)
 			end
 			
-			def where(*arguments)
-				@model.where(@session, *arguments)
+			def where(*arguments, **options, &block)
+				where = @model.where(@session, *arguments, **options, &block)
+				
+				if predicate = self.predicate
+					where.predicate &= predicate
+				end
+				
+				return where
 			end
 			
 			def predicate
 				nil
 			end
 			
-			def count
+			def count(fields = Statement::Count::ALL)
 				result = Statement::Select.new(@model,
-					fields: Statement::Count::ALL,
+					fields: fields,
 					where: self.predicate,
 				).call(@session).to_a
 				
@@ -97,7 +112,13 @@ module DB
 			end
 			
 			def each(&block)
-				self.select.each(@session, @cache, &block)
+				if @cache
+					@cache.fetch(self.cache_key) do
+						self.select.to_a(@session, @cache)
+					end.each(&block)
+				else
+					self.select.each(@session, &block)
+				end
 			end
 			
 			def to_a
@@ -110,10 +131,16 @@ module DB
 				return records
 			end
 			
+			def cache_key
+				@model
+			end
+			
+			def update_cache(result)
+				@cache[self.cache_key] = self.select.apply(@session, result)
+			end
+			
 			def select
-				@select ||= Statement::Select.new(@model,
-					where: self.predicate
-				)
+				@select ||= Statement::Select.new(@model, where: self.predicate)
 			end
 			
 			def to_s

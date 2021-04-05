@@ -66,21 +66,29 @@ module DB
 				end
 				
 				# Directly insert one or more records.
-				def insert(session, keys, rows)
-					Statement::Insert.new(self,
-						Statement::Fields.new(keys),
-						Statement::Multiple.new(
-							rows.map{|row| Statement::Tuple.new(row)}
-						)
-					).to_a(session)
+				def insert(session, keys, rows, **attributes)
+					if attributes.any?
+						fields = Statement::Fields.new(attributes.keys + keys)
+						values = attributes.values
+						tuples = rows.map{|row| Statement::Tuple.new(values + row)}
+					else
+						fields = Statement::Fields.new(keys)
+						tuples = rows.map{|row| Statement::Tuple.new(row)}
+					end
+					
+					return Statement::Insert.new(self, fields, Statement::Multiple.new(tuples)).to_a(session)
 				end
 				
 				# Find records which match the given primary key.
 				def find(session, *key)
 					Statement::Select.new(self,
-						where: Statement::Equal.new(self, self.primary_key, key),
+						where: find_predicate(*key),
 						limit: Statement::Limit::ONE
 					).to_a(session)
+				end
+				
+				def find_predicate(*key)
+					Statement::Equal.new(self, self.primary_key, key)
 				end
 				
 				def where(session, *arguments, **options, &block)
@@ -169,7 +177,7 @@ module DB
 			end
 			
 			def save(session: @session)
-				changed = self.flatten!
+				return unless self.flatten!
 				
 				if persisted?
 					statement = Statement::Update.new(self,
