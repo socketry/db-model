@@ -30,6 +30,8 @@ class TestSchema
 	class User
 		include DB::Model::Record
 		
+		# @type = :users
+		
 		property :id
 		property :name
 		

@@ -31,7 +31,7 @@ module DB
 					@limit = limit
 				end
 				
-				def append_to(statement)
+				def append_to(statement, limit: @limit)
 					statement = statement.clause("SELECT")
 					
 					if @fields
@@ -48,7 +48,7 @@ module DB
 						@where.append_to(statement)
 					end
 					
-					@limit&.append_to(statement)
+					limit&.append_to(statement)
 					
 					return statement
 				end
@@ -81,6 +81,16 @@ module DB
 						result.each do |row|
 							yield @source.new(context, keys.zip(row).to_h, cache)
 						end
+					end
+				end
+				
+				def first(context, count, cache = nil)
+					limit = @limit&.first(count) || Limit.new(count)
+					
+					append_to(context, limit: limit).call do |connection|
+						result = connection.next_result
+						
+						return apply(context, result, cache)
 					end
 				end
 			end

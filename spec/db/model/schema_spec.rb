@@ -44,6 +44,25 @@ RSpec.shared_examples DB::Model::Schema do |adapter|
 		expect(schema.posts.count).to be == 3
 	end
 	
+	it "can insert and get them all" do
+		users = schema.users.insert([:name], [
+			["Ada Lovelace"],
+			["Grace Hopper"],
+		])
+		
+		schema.posts.insert([:user_id, :body], [
+			[users[0].id, "COBOL"],
+			[users[1].id, "Note G"],
+			[users[1].id, "Bernoulli Numbers"]
+		])
+		
+		expect(schema.users.to_a).to be_kind_of Array
+		
+		user = schema.users.first
+		
+		expect(user.posts.to_a).to be_kind_of Array
+	end
+	
 	it "can preload posts" do
 		names = 100.times.map{|i| ["Robot #{i}"]}
 		users = schema.users.insert([:name], names)

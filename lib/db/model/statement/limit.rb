@@ -41,6 +41,10 @@ module DB
 					return statement
 				end
 				
+				def first(count)
+					self.new(count, offset: @offset)
+				end
+				
 				ONE = self.new(1)
 			end
 		end

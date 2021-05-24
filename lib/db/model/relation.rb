@@ -55,7 +55,7 @@ module DB
 				return Statement::Select.new(@model,
 					where: predicate,
 					limit: Statement::Limit::ONE
-				).to_a(context)
+				).to_a(@context)
 			end
 			
 			def where(*arguments, **options, &block)
@@ -76,7 +76,7 @@ module DB
 				Statement::Select.new(@model,
 					fields: fields,
 					where: self.predicate,
-				).to_sql(context).call do |connection|
+				).to_sql(@context).call do |connection|
 					result = connection.next_result
 					
 					row = result.to_a.first
@@ -115,13 +115,21 @@ module DB
 				return self
 			end
 			
-			def each(&block)
+			def each(cache: @cache, &block)
 				if @cache
 					@cache.fetch(self.cache_key) do
 						self.select.to_a(@context, @cache)
 					end.each(&block)
 				else
 					self.select.each(@context, &block)
+				end
+			end
+			
+			def first(count = nil)
+				if count
+					self.select.first(@context, count, @cache)
+				else
+					self.select.first(@context, 1, @cache).first
 				end
 			end
 			

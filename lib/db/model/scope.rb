@@ -57,10 +57,6 @@ module DB
 				[@model, @attributes]
 			end
 			
-			def each(cache: @cache, &block)
-				super(cache: cache, &block)
-			end
-			
 			def to_s
 				"\#<#{self.class} #{@model} #{@attributes}>"
 			end
