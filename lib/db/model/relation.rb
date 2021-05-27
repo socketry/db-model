@@ -20,7 +20,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-require_relative 'statement/count'
+require_relative 'countable'
 
 module DB
 	module Model
@@ -36,6 +36,8 @@ module DB
 			attr :context
 			attr :model
 			attr :cache
+			
+			include Countable
 			
 			def create(**attributes)
 				self.new(**attributes).save

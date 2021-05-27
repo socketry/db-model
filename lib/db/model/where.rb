@@ -23,6 +23,8 @@
 require_relative 'statement/select'
 require_relative 'statement/predicate'
 
+require_relative 'countable'
+
 module DB
 	module Model
 		class Where
@@ -35,6 +37,8 @@ module DB
 			end
 			
 			attr_accessor :predicate
+			
+			include Countable
 			
 			def or(*arguments, **options, &block)
 				@predicate |= Statement::Predicate.where(*arguments, **options, &block)
