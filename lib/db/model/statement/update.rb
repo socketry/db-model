@@ -36,7 +36,11 @@ module DB
 					statement.identifier(@source.type)
 					
 					@assignment.append_to(statement)
-					@where&.append_to(statement)
+					
+					if @where
+						statement.clause "WHERE"
+						@where.append_to(statement)
+					end
 					
 					return statement
 				end

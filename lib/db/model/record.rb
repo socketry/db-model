@@ -29,6 +29,9 @@ require_relative 'statement/multiple'
 require_relative 'statement/fields'
 require_relative 'statement/tuple'
 
+require_relative 'statement/update'
+require_relative 'statement/assignment'
+
 require_relative 'scope'
 require_relative 'where'
 
@@ -43,7 +46,7 @@ module DB
 					klass.instance_variable_set(:@properties, {})
 					klass.instance_variable_set(:@relationships, {})
 					
-					klass.instance_variable_set(:@primary_key, nil)
+					klass.instance_variable_set(:@key_columns, [:id].freeze)
 					
 					default_type = klass.name.split('::').last.gsub(/(.)([A-Z])/,'\1_\2').downcase!.to_sym
 					klass.instance_variable_set(:@type, default_type)
@@ -52,9 +55,12 @@ module DB
 				attr :type
 				attr :properties
 				attr :relationships
+				attr :key_columns
 				
 				def primary_key
-					[DB::Identifier[@type, :id]]
+					@key_columns.map do |name|
+						DB::Identifier[@type, name]
+					end
 				end
 				
 				# Directly create one record.
@@ -84,7 +90,7 @@ module DB
 					Statement::Select.new(self,
 						where: find_predicate(*key),
 						limit: Statement::Limit::ONE
-					).to_a(context)
+					).to_a(context).first
 				end
 				
 				def find_predicate(*key)
@@ -124,6 +130,7 @@ module DB
 					end
 					
 					self.define_method(:"#{name}=") do |value|
+						@changed ||= Hash.new
 						@changed[name] = value
 					end
 					
@@ -148,7 +155,7 @@ module DB
 			def initialize(context, attributes, cache = nil)
 				@context = context
 				@attributes = attributes
-				@changed = nil
+				@changed = changed
 				@cache = cache
 			end
 			
@@ -169,29 +176,50 @@ module DB
 				end
 			end
 			
-			# A record which has a valid primary key is considered to be persisted.
-			def persisted?
-				self.class.primary_key.all? do |field|
-					@attributes.key?(field)
+			def assign(changed)
+				@changed = changed
+				
+				return self
+			end
+			
+			def reload(context = @context)
+				if key = self.persisted?
+					self.class.find(context, *key)
 				end
 			end
 			
+			# A record which has a valid primary key is considered to be persisted.
+			def persisted?
+				self.class.key_columns.map do |field|
+					@attributes[field] or return false
+				end
+			end
+			
+			def new_record?
+				!persisted?
+			end
+			
 			def save(context: @context)
-				return unless self.flatten!
+				return unless attributes = self.flatten!
 				
-				if persisted?
-					statement = Statement::Update.new(self,
-						Statement::Fields.new(attributes.keys),
-						Statement::Tuple.new(attributes.values)
+				if key = persisted?
+					statement = Statement::Update.new(self.class,
+						Statement::Assignment.new(attributes),
+						self.class.find_predicate(*key)
 					)
 				else
-					statement = Statement::Insert.new(self,
+					statement = Statement::Insert.new(self.class,
 						Statement::Fields.new(attributes.keys),
 						Statement::Tuple.new(attributes.values)
 					)
 				end
 				
-				return statement.to_a(@context)
+				statement.call(@context) do |attributes|
+					# Only insert will hit this code path:
+					@attributes.update(attributes)
+				end
+				
+				return self
 			end
 			
 			def scope(model, attributes)
@@ -202,31 +230,22 @@ module DB
 			
 			# Moves values from `@changed` into `@attributes`.
 			def flatten!
-				return nil unless keys = @changed&.keys
+				return nil unless @changed&.any?
 				
-				self.class.properties.each do |key, klass|
-					begin
-						if @changed.include?(key)
-							if klass
-								@attributes[key] = klass.dump(@changed[key])
-								@changed.delete(key)
-							else
-								@attributes[key] = @changed.delete(key)
-							end
-						end
-					rescue
-						raise SerializationError, "Failed to flatten #{key.inspect} of type #{klass.inspect}!"
-					end
-				end
+				properties = self.class.properties
+				changed = {}
 				
-				# Non-specific properties:
 				@changed.each do |key, value|
-					@attributes[key] = value
+					if klass = properties[key]
+						value = klass.dump(value)
+					end
+					
+					changed[key] = @attributes[key] = value
 				end
 				
 				@changed = nil
 				
-				return keys
+				return changed
 			end
 		end
 	end

@@ -26,12 +26,12 @@ require_relative 'statement/predicate'
 module DB
 	module Model
 		class Where
-			include Enumerable
-			
 			def initialize(context, model, *arguments, **options, &block)
 				@context = context
 				@model = model
 				@predicate = Statement::Predicate.where(*arguments, **options, &block)
+				
+				@select = nil
 			end
 			
 			attr_accessor :predicate
@@ -61,10 +61,22 @@ module DB
 				)
 			end
 			
-			def each(&block)
-				Statement::Select.new(@model,
+			def select
+				@select ||= Statement::Select.new(@model,
 					where: @predicate
-				).each(@context, &block)
+				)
+			end
+			
+			def each(&block)
+				self.select.each(@context, &block)
+			end
+			
+			def first(count = nil)
+				if count
+					self.select.first(@context, count)
+				else
+					self.select.first(@context, 1).first
+				end
 			end
 			
 			def to_s

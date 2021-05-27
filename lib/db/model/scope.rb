@@ -33,8 +33,8 @@ module DB
 			
 			attr :attributes
 			
-			def create(**attributes)
-				@model.create(@context, @attributes.merge(attributes))
+			def new(**attributes)
+				@model.new(@context, {}, @cache).assign(**@attributes.merge(attributes))
 			end
 			
 			def insert(keys, rows, **attributes)

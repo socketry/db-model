@@ -38,7 +38,11 @@ module DB
 			attr :cache
 			
 			def create(**attributes)
-				@model.create(@context, attributes)
+				self.new(**attributes).save
+			end
+			
+			def new(**attributes)
+				@model.new(@context, {}, @cache).assign(attributes)
 			end
 			
 			def insert(keys, rows, **attributes)

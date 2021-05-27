@@ -46,6 +46,17 @@ module DB
 					return statement
 				end
 				
+				def call(context)
+					to_sql(context).call do |connection|
+						result = connection.next_result
+						keys = result.field_names.map(&:to_sym)
+						
+						result.each do |row|
+							yield(keys.zip(row).to_h)
+						end
+					end
+				end
+				
 				def to_a(context)
 					to_sql(context).call do |connection|
 						result = connection.next_result
