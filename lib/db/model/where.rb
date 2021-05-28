@@ -38,7 +38,7 @@ module DB
 			
 			attr_accessor :predicate
 			
-			include Countable
+			include Countable, Deletable
 			
 			def or(*arguments, **options, &block)
 				@predicate |= Statement::Predicate.where(*arguments, **options, &block)

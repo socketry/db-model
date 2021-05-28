@@ -21,6 +21,7 @@
 # THE SOFTWARE.
 
 require_relative 'countable'
+require_relative 'deletable'
 
 module DB
 	module Model
@@ -37,7 +38,7 @@ module DB
 			attr :model
 			attr :cache
 			
-			include Countable
+			include Countable, Deletable
 			
 			def create(**attributes)
 				self.new(**attributes).save

@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-# Copyright, 2021, by Samuel G. D. Williams. <http://www.codeotaku.com>
+# Copyright, 2012, by Samuel G. D. Williams. <http://www.codeotaku.com>
 # 
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -20,36 +20,15 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+require_relative 'statement/delete'
+
 module DB
 	module Model
-		module Statement
-			class Delete
-				def initialize(source, where: nil, order: nil, limit: nil)
-					@source = source
-					@where = where
-					@order = order
-					@limit = limit
-				end
-				
-				def to_sql(context)
-					statement = context.clause("DELETE FROM")
-					
-					statement.identifier(@source.type)
-					
-					if @where
-						statement.clause "WHERE"
-						@where.append_to(statement)
-					end
-					
-					@order&.append_to(statement)
-					@limit&.append_to(statement)
-					
-					return statement
-				end
-				
-				def call(context)
-					to_sql(context).call
-				end
+		module Deletable
+			def delete
+				Statement::Delete.new(@model,
+					where: self.predicate,
+				).call(@context)
 			end
 		end
 	end
