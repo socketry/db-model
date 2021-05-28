@@ -62,7 +62,7 @@ module DB
 				return Statement::Select.new(@model,
 					where: predicate,
 					limit: Statement::Limit::ONE
-				).to_a(@context)
+				).to_a(@context).first
 			end
 			
 			def where(*arguments, **options, &block)

@@ -41,14 +41,6 @@ module DB
 				@model.insert(@context, keys, rows, **@attributes.merge(attributes))
 			end
 			
-			def find(*key)
-				@model.find(@context, *key)
-			end
-			
-			def where(*arguments)
-				@model.where(@context, *arguments)
-			end
-			
 			def predicate
 				Statement::Equal.new(@model, @attributes.keys, @attributes.values)
 			end
