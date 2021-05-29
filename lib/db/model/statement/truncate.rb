@@ -20,18 +20,25 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-require_relative 'relation'
-require_relative 'statement/truncate'
-
 module DB
 	module Model
-		class Table < Relation
-			def cache_key
-				[@model]
-			end
-			
-			def truncate
-				Statement::Truncate.new(@model).call(@context)
+		module Statement
+			class Truncate
+				def initialize(source)
+					@source = source
+				end
+				
+				def to_sql(context)
+					statement = context.clause("TRUNCATE TABLE")
+					
+					statement.identifier(@source.type)
+					
+					return statement
+				end
+				
+				def call(context)
+					to_sql(context).call
+				end
 			end
 		end
 	end

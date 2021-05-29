@@ -25,6 +25,14 @@ require_relative 'schema_context'
 RSpec.shared_examples DB::Model::Schema do |adapter|
 	include_context TestSchema, adapter
 	
+	it "can truncate tables" do
+		schema.users.truncate
+		expect(schema.users).to be_empty
+		
+		schema.posts.truncate
+		expect(schema.posts).to be_empty
+	end
+	
 	it "can insert and find records by id" do
 		users = schema.users.insert([:name], [
 			["Ada Lovelace"],
