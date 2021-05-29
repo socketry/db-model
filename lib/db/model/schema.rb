@@ -25,12 +25,13 @@ require_relative 'table'
 module DB
 	module Model
 		module Schema
-			def initialize(context)
+			def initialize(context, cache: {})
 				@context = context
+				@cache = cache
 			end
 			
-			def table(model, **options)
-				Table.new(@context, model, **options)
+			def table(model)
+				Table.new(@context, model, @cache)
 			end
 		end
 	end

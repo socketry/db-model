@@ -151,7 +151,7 @@ module DB
 			end
 			
 			def cache_key
-				@model
+				[@model, self.predicate]
 			end
 			
 			def update_cache(result)

@@ -28,6 +28,8 @@ module DB
 					@values = values
 				end
 				
+				attr :values
+				
 				def append_to(statement)
 					first = true
 					
@@ -41,6 +43,14 @@ module DB
 					statement.clause(")")
 					
 					return statement
+				end
+				
+				def eql?(other)
+					self.class.eql?(other.class) && self.values.eql?(other.values)
+				end
+				
+				def hash
+					[self.class, @values].hash
 				end
 			end
 		end

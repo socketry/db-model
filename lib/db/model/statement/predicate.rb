@@ -34,6 +34,14 @@ module DB
 					def + other
 						other
 					end
+					
+					def eql?(other)
+						self.class.eql?(other.class)
+					end
+					
+					def hash
+						self.class.hash
+					end
 				end
 				
 				EMPTY = Empty.new
@@ -45,12 +53,24 @@ module DB
 						@maximum = maximum
 					end
 					
+					attr :key
+					attr :minimum
+					attr :maximum
+					
 					def append_to(statement)
 						@key.append_to(statement)
 						statement.clause("BETWEEN")
 						@minimum.append_to(statement)
 						statement.clause("AND")
 						@maximum.append_to(statement)
+					end
+					
+					def eql?(other)
+						self.class.eql?(other.class) && self.key.eql?(other.key) && self.minimum.eql?(other.minimum) && self.maximum.eql?(other.maximum)
+					end
+					
+					def hash
+						[self.class, @key, @minimum, @maximum].hash
 					end
 				end
 				
@@ -61,10 +81,22 @@ module DB
 						@value = value
 					end
 					
+					attr :key
+					attr :operator
+					attr :value
+					
 					def append_to(statement)
 						@key.append_to(statement)
 						statement.clause(@operator)
 						@value.append_to(statement)
+					end
+					
+					def eql?(other)
+						self.class.eql?(other.class) && self.key.eql?(other.key) && self.operator.eql?(other.operator) && self.value.eql?(other.value)
+					end
+					
+					def hash
+						[self.class, @key, @operator, @value].hash
 					end
 				end
 				
@@ -73,9 +105,19 @@ module DB
 						@key = key
 					end
 					
+					attr :key
+					
 					def append_to(statement)
 						@key.append_to(statement)
 						statement.clause("IS NULL")
+					end
+					
+					def eql?(other)
+						self.class.eql?(other.class) && self.key.eql?(other.key)
+					end
+					
+					def hash
+						[self.class, @key].hash
 					end
 				end
 				
@@ -92,6 +134,9 @@ module DB
 						@predicates = predicates
 						@operator = operator
 					end
+					
+					attr :predicates
+					attr :operator
 					
 					def append_to(statement)
 						first = true
@@ -118,6 +163,14 @@ module DB
 					
 					def | other
 						Composite.new([self, other], "OR")
+					end
+					
+					def eql?(other)
+						self.class.eql?(other.class) && self.predicates.eql?(other.predicates)
+					end
+					
+					def hash
+						[self.class, @predicates, @operator].hash
 					end
 				end
 				
