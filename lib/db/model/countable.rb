@@ -39,6 +39,10 @@ module DB
 					return row.first
 				end
 			end
+			
+			def empty?
+				self.count == 0
+			end
 		end
 	end
 end

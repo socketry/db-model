@@ -79,20 +79,6 @@ module DB
 				nil
 			end
 			
-			def count(fields = Statement::Count::ALL)
-				Statement::Select.new(@model,
-					fields: fields,
-					where: self.predicate,
-				).to_sql(@context).call do |connection|
-					result = connection.next_result
-					
-					row = result.to_a.first
-					
-					# Return the count:
-					return row.first
-				end
-			end
-			
 			def preload(name)
 				@cache ||= {}
 				
