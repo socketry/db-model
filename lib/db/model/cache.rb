@@ -49,6 +49,10 @@ module DB
 				@relations[key] = records
 			end
 			
+			def inspect
+				"\#<#{self.class} #{@relations.size} relations; #{@records.size} records>"
+			end
+			
 		protected
 			
 			def deduplicate(records)

@@ -34,6 +34,10 @@ module DB
 			def table(model)
 				Table.new(@context, model, @cache)
 			end
+			
+			def inspect
+				"\#<#{self.class} #{@context.class} cache=#{@cache}>"
+			end
 		end
 	end
 end
