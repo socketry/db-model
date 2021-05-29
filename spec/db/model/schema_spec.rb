@@ -37,7 +37,7 @@ RSpec.shared_examples DB::Model::Schema do |adapter|
 			[users[1].id, "Bernoulli Numbers"]
 		])
 		
-		user = schema.users.find(users.first.id).first
+		user = schema.users.find(users.first.id)
 		expect(user.name).to be == users.first.name
 		
 		expect(schema.users.count).to be == 2
