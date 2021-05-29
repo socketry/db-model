@@ -80,7 +80,7 @@ module DB
 			end
 			
 			def preload(name)
-				@cache ||= {}
+				@cache ||= Cache.new
 				
 				scopes = []
 				self.each do |record|
@@ -141,7 +141,7 @@ module DB
 			end
 			
 			def update_cache(result)
-				@cache[self.cache_key] = self.select.apply(@context, result)
+				@cache.update(self.cache_key, self.select.apply(@context, result))
 			end
 			
 			def select

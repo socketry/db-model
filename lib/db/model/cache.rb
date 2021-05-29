@@ -20,19 +20,41 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-require_relative 'table'
-require_relative 'cache'
+require_relative 'statement/select'
+require_relative 'statement/count'
 
 module DB
 	module Model
-		module Schema
-			def initialize(context, cache: Cache.new)
-				@context = context
-				@cache = cache
+		class Cache
+			def initialize
+				@relations = {}
+				@records = {}
 			end
 			
-			def table(model)
-				Table.new(@context, model, @cache)
+			def empty?
+				@relations.empty?
+			end
+			
+			def size
+				@relations.size
+			end
+			
+			def fetch(key)
+				@relations.fetch(key) do
+					deduplicate(yield)
+				end
+			end
+			
+			def update(key, records)
+				@relations[key] = records
+			end
+			
+		protected
+			
+			def deduplicate(records)
+				records.map do |record|
+					@records[record] = record
+				end
 			end
 		end
 	end

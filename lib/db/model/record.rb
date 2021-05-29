@@ -226,6 +226,21 @@ module DB
 				Scope.new(@context, model, attributes, @cache)
 			end
 			
+			def eql?(other)
+				return false unless self.class.eql?(other.class)
+				return false unless key = self.persisted?
+				
+				return key.eql?(other.persisted?)
+			end
+			
+			def hash
+				if key = self.persisted?
+					key.hash
+				else
+					raise KeyError, "Record is not persisted!"
+				end
+			end
+			
 		protected
 			
 			# Moves values from `@changed` into `@attributes`.
