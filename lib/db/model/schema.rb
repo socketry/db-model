@@ -31,6 +31,9 @@ module DB
 				@cache = cache
 			end
 			
+			attr :context
+			attr :cache
+			
 			def table(model)
 				Table.new(@context, model, @cache)
 			end
