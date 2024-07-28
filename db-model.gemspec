@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 
 require_relative "lib/db/model/version"
 
@@ -9,16 +10,19 @@ Gem::Specification.new do |spec|
 	spec.authors = ["Samuel Williams"]
 	spec.license = "MIT"
 	
+	spec.cert_chain  = ['release.cert']
+	spec.signing_key = File.expand_path('~/.gem/release.pem')
+	
 	spec.homepage = "https://github.com/socketry/db-model"
 	
-	spec.files = Dir.glob('{lib}/**/*', File::FNM_DOTMATCH, base: __dir__)
+	spec.metadata = {
+		"documentation_uri" => "https://socketry.github.io/db-model/",
+		"source_code_uri" => "https://github.com/socketry/db-model.git",
+	}
 	
-	spec.required_ruby_version = ">= 2.5"
+	spec.files = Dir.glob(['{lib}/**/*', '*.md'], File::FNM_DOTMATCH, base: __dir__)
+	
+	spec.required_ruby_version = ">= 3.1"
 	
 	spec.add_dependency "db", "~> 0.10.0"
-	
-	spec.add_development_dependency "async-rspec", "~> 1.10"
-	spec.add_development_dependency "bundler"
-	spec.add_development_dependency "covered"
-	spec.add_development_dependency "rspec", "~> 3.0"
 end
