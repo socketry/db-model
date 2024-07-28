@@ -9,7 +9,7 @@ describe DB::Model::Schema do
 	DB::Adapters.each do |name, klass|
 		describe klass, unique: name do
 			include_context DB::Model::SchemaContext, klass.new(**CREDENTIALS)
-	
+			
 			it "can truncate tables" do
 				schema.users.truncate
 				expect(schema.users).to be(:empty?)
@@ -70,7 +70,6 @@ describe DB::Model::Schema do
 				expect(users.cache).not.to be(:empty?)
 				expect(users.cache.size).to be == 100
 			end
-		
 		end
 	end
 end
