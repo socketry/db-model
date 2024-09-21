@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # Released under the MIT License.
-# Copyright, 2021, by Samuel Williams.
+# Copyright, 2021-2024, by Samuel Williams.
 
 module DB
 	module Model
@@ -15,7 +15,7 @@ module DB
 					statement.clause(@value)
 				end
 				
-				ANY = self.new('*')
+				ANY = self.new("*")
 			end
 		end
 	end

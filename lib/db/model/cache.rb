@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
 # Released under the MIT License.
-# Copyright, 2021, by Samuel Williams.
+# Copyright, 2021-2024, by Samuel Williams.
 
-require_relative 'statement/select'
-require_relative 'statement/count'
+require_relative "statement/select"
+require_relative "statement/count"
 
 module DB
 	module Model

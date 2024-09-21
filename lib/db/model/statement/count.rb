@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
 # Released under the MIT License.
-# Copyright, 2021, by Samuel Williams.
+# Copyright, 2021-2024, by Samuel Williams.
 
-require_relative 'clause'
+require_relative "clause"
 
 module DB
 	module Model

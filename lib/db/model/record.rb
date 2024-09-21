@@ -1,22 +1,22 @@
 # frozen_string_literal: true
 
 # Released under the MIT License.
-# Copyright, 2021, by Samuel Williams.
+# Copyright, 2021-2024, by Samuel Williams.
 
-require_relative 'statement/select'
-require_relative 'statement/equal'
-require_relative 'statement/limit'
+require_relative "statement/select"
+require_relative "statement/equal"
+require_relative "statement/limit"
 
-require_relative 'statement/insert'
-require_relative 'statement/multiple'
-require_relative 'statement/fields'
-require_relative 'statement/tuple'
+require_relative "statement/insert"
+require_relative "statement/multiple"
+require_relative "statement/fields"
+require_relative "statement/tuple"
 
-require_relative 'statement/update'
-require_relative 'statement/assignment'
+require_relative "statement/update"
+require_relative "statement/assignment"
 
-require_relative 'scope'
-require_relative 'where'
+require_relative "scope"
+require_relative "where"
 
 module DB
 	module Model
@@ -31,7 +31,7 @@ module DB
 					
 					klass.instance_variable_set(:@key_columns, [:id].freeze)
 					
-					default_type = klass.name.split('::').last.gsub(/(.)([A-Z])/,'\1_\2').downcase!.to_sym
+					default_type = klass.name.split("::").last.gsub(/(.)([A-Z])/,'\1_\2').downcase!.to_sym
 					klass.instance_variable_set(:@type, default_type)
 				end
 				
